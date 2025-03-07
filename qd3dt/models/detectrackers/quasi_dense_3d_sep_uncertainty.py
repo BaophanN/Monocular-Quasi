@@ -461,7 +461,7 @@ class QuasiDense3DSepUncertainty(BaseDetector, RPNTestMixin, BBoxTestMixin,
                 det_2dcs=det_2dcs)
 
         # TODO: use boxes_3d to match KF3d in tracker
-        print('##img_meta', img_meta);exit()
+        # print('##img_meta', img_meta);exit()
         mmcv.check_accum_time('lifting', counting=True)
         # calib info from nuscenes: intrinsic. same device as det_bboxes 
         projection = det_bboxes.new_tensor(img_meta[0]['calib'])
