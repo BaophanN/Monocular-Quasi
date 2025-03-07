@@ -113,6 +113,7 @@ class QuasiDense3DSepUncertainty(BaseDetector, RPNTestMixin, BBoxTestMixin,
             self.embed_head.init_weights()
 
     def extract_feat(self, img):
+        # backbone + neck
         x = self.backbone(img)
         if self.with_neck:
             x = self.neck(x)
@@ -378,7 +379,7 @@ class QuasiDense3DSepUncertainty(BaseDetector, RPNTestMixin, BBoxTestMixin,
         # init tracker
         frame_ind = img_meta[0].get('frame_id', -1)
         is_kitti = 'KITTI' in img_meta[0]['img_info']['file_name']
-        use_3d_center = self.test_cfg.get('use_3d_center', False)
+        use_3d_center = self.test_cfg.get('use_3d_center', False) # not use 3d_center 
 
         if self.tracker is None:
             self.tracker = mmcv.runner.obj_from_dict(self.test_cfg.track,
@@ -461,16 +462,26 @@ class QuasiDense3DSepUncertainty(BaseDetector, RPNTestMixin, BBoxTestMixin,
 
         # TODO: use boxes_3d to match KF3d in tracker
         mmcv.check_accum_time('lifting', counting=True)
+        # calib info from nuscenes: intrinsic 
         projection = det_bboxes.new_tensor(img_meta[0]['calib'])
+        # from nuscenes also 
         position = det_bboxes.new_tensor(img_meta[0]['pose']['position'])
+        # rotation matrix from imu pose 
         r_camera_to_world = tu.angle2rot(
             np.array(img_meta[0]['pose']['rotation']))
+        # turn rotation into a tensor 
         rotation = det_bboxes.new_tensor(r_camera_to_world)
+        # turn into a quaternion 
         cam_rot_quat = Quaternion(matrix=r_camera_to_world)
         quat_det_yaws_world = {'roll_pitch': [], 'yaw_world': []}
 
         if det_depths is not None and det_2dcs is not None:
+            """
+            image cam world
+            """
+            # image2cam. Check this function 
             corners = tu.imagetocamera_torch(det_2dcs, det_depths, projection)
+            # 
             corners_global = tu.cameratoworld_torch(corners, position,
                                                     rotation)
             det_yaws = tu.alpha2yaw_torch(det_alphas, corners[:, 0:1],

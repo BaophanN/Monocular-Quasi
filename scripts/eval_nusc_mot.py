@@ -242,7 +242,10 @@ def eval(res_path, eval_set, version, output_dir=None, root_path=None):
     from nuscenes.eval.common.config import config_factory as track_configs
 
     cfg = track_configs("tracking_nips_2019")
-
+    version = 'v1.0-mini'
+    print(f'root_path:{root_path}')
+    print(f'version:{version}') # CHANGE
+    # exit()
     nusc_eval = track_eval(
         config=cfg,
         result_path=res_path,

@@ -96,7 +96,7 @@ def make_cuda_ext(name, module, sources):
                 '-D__CUDA_NO_HALF_OPERATORS__',
                 '-D__CUDA_NO_HALF_CONVERSIONS__',
                 '-D__CUDA_NO_HALF2_OPERATORS__',
-                '-gencode=arch=compute_86,code=sm_86',
+                '-gencode=arch=compute_75,code=sm_75',
             ]
         })
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
         tests_require=['pytest'],
         install_requires=[
             'mmcv>=0.2.6', 'numpy', 'matplotlib', 'six', 'terminaltables',
-            'pycocotools', 'torch>=1.1', 'motmetrics', 'seaborn', 'sklearn', 'tensorflow-gpu'
+            'pycocotools', 'torch>=1.1', 'motmetrics', 'seaborn', 'scikit-learn', 'tensorflow-gpu'
         ],
         ext_modules=[
             make_cython_ext(

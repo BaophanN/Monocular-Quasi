@@ -28,6 +28,10 @@ ablation_study_list = [
 cat_mapping = {
     'kitti': ['Car', 'Pedestrian', 'Cyclist'],
     'gta': ['Car'],
+    'nuscenes-modify-CAM_FRONT-highway':
+    ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
+    'nuscenes-modify-CAM_FRONT':
+    ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
     'nuscenes':
     ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
     'waymo': ['Car', 'Pedestrian', 'Cyclist'],
@@ -50,7 +54,8 @@ def parse_args():
         default='track',
         choices=['track', 'bbox'],
         help='eval types')
-    parser.add_argument('--show', action='store_true', help='show results')
+    # parser.add_argument('--show', action='store_true', help='show results')
+    parser.add_argument('--show', action='store_true', help='show results',default='True')
     parser.add_argument(
         '--show_time', action='store_true', help='show profiling time')
     parser.add_argument(
@@ -68,7 +73,7 @@ def parse_args():
     parser.add_argument(
         '--full_frames',
         action='store_true',
-        help='using all frames imformation for nuScenes')
+        help='using all frames information for nuScenes')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -77,6 +82,7 @@ def parse_args():
 
 def run_inference_and_evaluate(args, cfg, out_path):
     print(f"Starting {out_path} ...")
+    
     run_inference(cfg, args.checkpoint, out_path, show_time=args.show_time)
     run_evaluate(args.dataset_name, cfg, out_path)
     print()
@@ -93,7 +99,10 @@ def run_inference(cfg,
     if osp.isfile(out_pkl_path):
         print(f"{out_pkl_path} already exist")
         return
-
+    # print(checkpoint_path)
+    # f = open('a.txt')
+    # f.write(checkpoint_path)
+    # f.close()
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -238,16 +247,17 @@ def run_visualize(dataset_name: str,
                   draw_2d: bool = False):
     print('Ploting 3D boxes and BEV:')
     out_json_path = osp.join(out_path, 'output.json')
-
+    # print('###',cfg.data.test.ann_file['VID']) ;exit()
     gt_annos = read_file(cfg.data.test.ann_file['VID'], category)
     pd_annos = read_file(out_json_path, category)
 
-    fps = 7.0
+    fps = 2
     draw_bev = True
     is_save = is_merge = is_remove = True
     visualizer = Visualizer(dataset_name, out_json_path, fps, draw_bev, draw_2d, draw_3d,
                             is_save, is_merge, is_remove)
-    visualizer.save_vid(pd_annos, gt_annos)
+    visualizer.save_vid(pd_annos, gt_annos) # OG 
+    # visualizer.save_vid(pd_annos)
 
 
 def single_gpu_test(model,
@@ -291,7 +301,7 @@ def single_gpu_test(model,
 
 
 def best_model(args, out_path: str):
-    if args.dataset_name == 'nuscenes':
+    if args.dataset_name == 'nuscenes' or args.dataset_name == 'nuscenes-modify-CAM_FRONT' or args.dataset_name == 'nuscenes-modify-CAM_FRONT-highway':
         best_model_Nusc(args, out_path)
     elif args.dataset_name == 'kitti':
         best_model_KITTI(args, out_path)
@@ -901,6 +911,7 @@ def pure_detection(args, out_path: str):
 
 
 def match_comparison(args, out_path: str):
+    # Why are there two run_inference_and_evaluate below. Compare between greedy and hungarian 
     args.show_time = True
 
     data_split = args.data_split_prefix

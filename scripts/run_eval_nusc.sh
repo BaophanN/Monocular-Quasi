@@ -15,7 +15,7 @@ config=$(basename -s .py ${config_path})
 
 # 3D Detection Evaluation
 python scripts/eval_nusc_det.py \
---version=v1.0-trainval \
+--version=v1.0-mini \
 --root=data/nuscenes/ \
 --work_dir=$work_dir \
 --gt_anns=data/nuscenes/anns/tracking_val.json 2>&1 | tee ${work_dir}/eval_det_nusc.txt
@@ -24,7 +24,7 @@ python scripts/eval_nusc_det.py \
 export PYENV_VERSION=Nusc
 
 python scripts/eval_nusc_mot.py \
---version=v1.0-trainval \
+--version=v1.0-mini \
 --root=data/nuscenes/ \
 --work_dir=$work_dir \
 --gt_anns=data/nuscenes/anns/tracking_val.json 2>&1 | tee ${work_dir}/eval_mot_nusc.txt

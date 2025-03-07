@@ -242,12 +242,15 @@ def convert_track(args):
         for sample_id in range(scene['nbr_samples']):
             annos = []
             img_id = first_frame_id + sample_id
+            # Attention 
+            # pose from IMU
             pose_dict = tracking_result['images'][img_id]['pose']
+            # Calibration info 
             projection = tracking_result['images'][img_id]['cali']
-
+            # Rotation matrix from pose 
             cam_to_global = R.from_euler(
                 'xyz', pose_dict['rotation']).as_matrix()
-
+            # Read the output 
             outputs = [ann for ann in tracking_result['annotations'] if ann['image_id'] == img_id]
 
             for output in outputs:
@@ -258,13 +261,17 @@ def convert_track(args):
 
                 # move to world coordinate
                 translation = np.dot(
+                    # rotation * translation 
                     cam_to_global, np.array(output['translation']))
+                # R*T + position? How? 
                 translation += np.array(pose_dict['position'])
-
+                                
                 quat = Quaternion(axis=[0, 1, 0], radians=output['roty'])
+                # convert to quaternion 
                 x, y, z, w = R.from_matrix(cam_to_global).as_quat()
+                # rotation * quaternion 
                 rotation = Quaternion([w, x, y, z]) * quat
-
+                
                 h, w, l = output['dimension']
                 dimension = [w, l, h]
                 for i in range(len(dimension)):
@@ -370,7 +377,7 @@ def eval(res_path, eval_set, output_dir=None, root_path=None, nusc=None):
 
 def main():
     args = parse_args()
-
+    # Convert tracking result from output of the model 
     nusc = convert_track(args)
 
     if args.version != 'v1.0-test':

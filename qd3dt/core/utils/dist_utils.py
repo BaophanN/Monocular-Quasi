@@ -56,3 +56,6 @@ class DistOptimizerHook(OptimizerHook):
         if self.grad_clip is not None:
             self.clip_grads(runner.model.parameters())
         runner.optimizer.step()
+
+# if __name__ == "__main__":
+#     print('hi')

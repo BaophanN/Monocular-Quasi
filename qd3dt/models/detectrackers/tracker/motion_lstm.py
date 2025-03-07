@@ -58,13 +58,14 @@ def fix_alpha(angle: float) -> float:
 cat_mapping = {
     'kitti': ['Car', 'Pedestrian', 'Cyclist'],
     'gta': ['Car'],
-    'nuscenes': [
-        'Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer',
-        'Truck', 'Construction_vehicle', 'Traffic_cone', 'Barrier'
-    ],
+    'nuscenes-modify-CAM_FRONT-highway':
+    ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
+    'nuscenes-modify-CAM_FRONT':
+    ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
+    'nuscenes':
+    ['Bicycle', 'Motorcycle', 'Pedestrian', 'Bus', 'Car', 'Trailer', 'Truck'],
     'waymo': ['Car', 'Pedestrian', 'Cyclist'],
 }
-
 
 class SeqDataset(Dataset):
 

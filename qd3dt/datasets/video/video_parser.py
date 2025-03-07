@@ -93,6 +93,8 @@ class VID:
         if annotation_file is not None:
             print('loading annotations into memory...')
             tic = time.time()
+            # print('!!', annotation_file)
+            # exit()
             with open(annotation_file, 'r') as f:
                 dataset = json.load(f)
             assert type(

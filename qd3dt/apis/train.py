@@ -7,11 +7,14 @@ import torch
 from mmcv.runner import Runner, DistSamplerSeedHook, obj_from_dict
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 
-from qd3dt import datasets
+
+# from qd3dt.core import (
+#                         CocoDistEvalRecallHook, CocoDistEvalmAPHook,
+#                         Fp16OptimizerHook, VidDistEvalHook)
 from qd3dt.core import (DistOptimizerHook, DistEvalmAPHook,
                         CocoDistEvalRecallHook, CocoDistEvalmAPHook,
                         Fp16OptimizerHook, VidDistEvalHook)
-from qd3dt.datasets import build_dataloader
+
 from qd3dt.models import RPN
 from .env import get_root_logger
 import torch.distributed as dist
@@ -160,6 +163,8 @@ def build_optimizer(model, optimizer_cfg):
 
 
 def _dist_train(model, dataset, cfg, validate=False):
+    from qd3dt import datasets
+    from qd3dt.datasets import build_dataloader
     # prepare data loaders
     data_loaders = [
         build_dataloader(

@@ -269,8 +269,8 @@ data = dict(
                 hue_delta=18), )),
     val=dict(
         type=dataset_type,
-        # ann_file=dict(VID=data_root + 'anns/tracking_val_mini.json'),
-        ann_file=dict(VID=data_root + 'anns/tracking_val.json'),
+        ann_file=dict(VID=data_root + 'anns/tracking_val_mini.json'),
+        # ann_file=dict(VID=data_root + 'anns/tracking_val.json'),
         img_prefix=dict(VID=data_root + 'samples/'),
         img_scale=(1600, 900),
         img_norm_cfg=img_norm_cfg,
@@ -283,7 +283,7 @@ data = dict(
         with_track=True),
     test=dict(
         type=dataset_type,
-        ann_file=dict(VID=data_root + 'anns/tracking_test.json'),
+        ann_file=dict(VID=data_root + 'anns/tracking_val_mini.json'),
         img_prefix=dict(VID=data_root + 'samples/'),
         img_scale=(1600, 900),
         img_norm_cfg=img_norm_cfg,

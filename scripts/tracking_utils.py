@@ -241,6 +241,10 @@ def projection3d(projection, pose, corners_global):
         position:  (3), translation of world coordinates
 
     point: (N, 2), N points on X-Y image plane
+    
+    3D->2D
+    world -> cam -> image 
+    ego2global = cam2global * ego2cam 
     """
     corners = worldtocamera(corners_global, pose)
     corners = cameratoimage(corners, projection)
@@ -310,10 +314,12 @@ def cameratoworld(corners, pose):
 
     corners_global: (N, 3), N points on X(right)-Y(front)-Z(up) world coordinate (GTA)
                     or X(front)-Y(left)-Z(up) velodyne coordinates (KITTI)
+
+    colmap:            X(right)-Y(down)-Z(front) 
     """
     assert corners.shape[1] == 3, ("Shape ({}) not fit".format(corners.shape))
     corners_global = corners.dot(pose.rotation.T) + \
-                     pose.position[np.newaxis]
+                     pose.position[np.newaxis] # x*T+R
     return corners_global
 
 

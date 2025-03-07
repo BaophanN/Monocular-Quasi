@@ -12,7 +12,7 @@ from torch.utils.data import Dataset
 
 from .coco_utils import results2json, coco_eval, fast_eval_recall
 from .mean_ap import eval_map
-from qd3dt import datasets
+
 import sys
 sys.path.append(
     osp.join(osp.dirname(osp.abspath(__file__)), '../../datasets/video'))
@@ -25,7 +25,7 @@ from evaluate_tracking import evaluate as kitti_evaluate
 
 
 class DistEvalHook(Hook):
-
+    from qd3dt import datasets
     def __init__(self, dataset, interval=1, work_dir=None):
         if isinstance(dataset, Dataset):
             self.dataset = dataset

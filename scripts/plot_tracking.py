@@ -379,7 +379,7 @@ class Visualizer():
 
         return frame
 
-    def plot_3D_box(self, n_seq_pd: str, pd_seq: dict, gt_seq: dict):
+    def plot_3D_box(self, n_seq_pd: str, pd_seq: dict, gt_seq: dict=None):
         id_to_color = {}
         cmap = pu.RandomColor(len(gt_seq['frames']))
 
@@ -393,8 +393,12 @@ class Visualizer():
         print(f"Trk: {self.trk_vid_name}")
         print(f"BEV: {self.bev_vid_name}")
 
-        self.resH = gt_seq['height']
-        self.resW = gt_seq['width']
+        # self.resH = gt_seq['height']
+        # self.resW = gt_seq['width']
+
+        self.resH = pd_seq['height']
+        self.resW = pd_seq['width']
+
         rawimg = None
         vid_trk = None
         vid_bev = None
@@ -408,7 +412,8 @@ class Visualizer():
             vid_bev = cv2.VideoWriter(self.bev_vid_name, self.FOURCC, self.fps,
                                       (self.bev_size, self.bev_size))
 
-        max_frames = max(len(pd_seq['frames']), len(gt_seq['frames']))
+        # max_frames = max(len(pd_seq['frames']), len(gt_seq['frames']))
+        max_frames = len(pd_seq['frames'])
         print(f"Seq ID: {n_seq_pd}\n"
               f"Total frames: {max_frames}\n"
               f"PD frames: {len(pd_seq['frames'])}\n"
@@ -449,16 +454,16 @@ class Visualizer():
             cam_calib = np.array(gt_objects['cam_calib'])
             cam_pose = ku.Pose(cam_coords, cam_rotation)
 
-            if self.align_gt:
-                boxes_2d_pd = [
-                    hypo['box'] for hypo in pd_objects['annotations']
-                ]
+            # if self.align_gt:
+            #     boxes_2d_pd = [
+            #         hypo['box'] for hypo in pd_objects['annotations']
+            #     ]
 
-            if len(gt_objects['annotations']) > 0 and self.is_gt:
-                gt_annos = sorted(
-                    gt_objects['annotations'],
-                    key=lambda x: x['location'][2],
-                    reverse=True)
+            # if len(gt_objects['annotations']) > 0 and self.is_gt:
+            #     gt_annos = sorted(
+            #         gt_objects['annotations'],
+            #         key=lambda x: x['location'][2],
+            #         reverse=True)
 
             if len(pd_objects['annotations']) > 0:
                 pd_annos = sorted(
@@ -466,110 +471,110 @@ class Visualizer():
                     key=lambda x: x['location'][2],
                     reverse=True)
 
-            for anno in gt_annos:
+            # for anno in gt_annos:
 
-                tid_gt_str = f"{anno['track_id']}GT"
-                tid_gt = anno['track_id']
-                box_gt = np.array(anno['box']).astype(int)
-                _, w_gt, l_gt = anno['dimension']
-                anno_dict = self.get_3d_info(anno, cam_calib, cam_pose)
-                center_gt = anno_dict['center']
-                loc_world_gt = anno_dict['loc_world']
-                yaw_gt = anno_dict['yaw']
-                yaw_world_gt = anno_dict['yaw_world_quat']
-                box3d_gt = anno_dict['box3d']
-                obj_class = anno_dict['class']
-                if tid_gt not in loc_world_hist_gt:
-                    loc_world_hist_gt[tid_gt] = {
-                        'loc': [loc_world_gt],
-                        'yaw': [yaw_world_gt]
-                    }
-                elif len(loc_world_hist_gt[tid_gt]['loc']) > self.num_hist:
-                    loc_world_hist_gt[tid_gt]['loc'] = loc_world_hist_gt[
-                        tid_gt]['loc'][1:] + [loc_world_gt]
-                    loc_world_hist_gt[tid_gt]['yaw'] = loc_world_hist_gt[
-                        tid_gt]['yaw'][1:] + [yaw_world_gt]
-                else:
-                    loc_world_hist_gt[tid_gt]['loc'].append(loc_world_gt)
-                    loc_world_hist_gt[tid_gt]['yaw'].append(yaw_world_gt)
+            #     tid_gt_str = f"{anno['track_id']}GT"
+            #     tid_gt = anno['track_id']
+            #     box_gt = np.array(anno['box']).astype(int)
+            #     _, w_gt, l_gt = anno['dimension']
+            #     anno_dict = self.get_3d_info(anno, cam_calib, cam_pose)
+            #     center_gt = anno_dict['center']
+            #     loc_world_gt = anno_dict['loc_world']
+            #     yaw_gt = anno_dict['yaw']
+            #     yaw_world_gt = anno_dict['yaw_world_quat']
+            #     box3d_gt = anno_dict['box3d']
+            #     obj_class = anno_dict['class']
+            #     if tid_gt not in loc_world_hist_gt:
+            #         loc_world_hist_gt[tid_gt] = {
+            #             'loc': [loc_world_gt],
+            #             'yaw': [yaw_world_gt]
+            #         }
+            #     elif len(loc_world_hist_gt[tid_gt]['loc']) > self.num_hist:
+            #         loc_world_hist_gt[tid_gt]['loc'] = loc_world_hist_gt[
+            #             tid_gt]['loc'][1:] + [loc_world_gt]
+            #         loc_world_hist_gt[tid_gt]['yaw'] = loc_world_hist_gt[
+            #             tid_gt]['yaw'][1:] + [yaw_world_gt]
+            #     else:
+            #         loc_world_hist_gt[tid_gt]['loc'].append(loc_world_gt)
+            #         loc_world_hist_gt[tid_gt]['yaw'].append(yaw_world_gt)
 
-                # Match gt and pd
-                if self.align_gt:
-                    _, idx, valid = tu.matching(
-                        np.array(anno['box']).reshape(-1, 4),
-                        np.array(boxes_2d_pd).reshape(-1, 4), 0.1)
-                    if valid is not None and valid.item():
-                        pd_objects['annotations'][
-                            idx[0]]['match_id_str'] = tid_gt_str
-                        pd_objects['annotations'][idx[0]]['match_id'] = tid_gt
-                        pd_objects['annotations'][idx[0]]['match'] = True
+            #     # Match gt and pd
+            #     if self.align_gt:
+            #         _, idx, valid = tu.matching(
+            #             np.array(anno['box']).reshape(-1, 4),
+            #             np.array(boxes_2d_pd).reshape(-1, 4), 0.1)
+            #         if valid is not None and valid.item():
+            #             pd_objects['annotations'][
+            #                 idx[0]]['match_id_str'] = tid_gt_str
+            #             pd_objects['annotations'][idx[0]]['match_id'] = tid_gt
+            #             pd_objects['annotations'][idx[0]]['match'] = True
 
-                # Get box color
-                # color is in BGR format (for cv2), color[:-1] in RGB format
-                # (for plt)
-                if tid_gt_str not in list(id_to_color):
-                    id_to_color[tid_gt_str] = cmap.get_random_color(scale=255)
-                color = id_to_color[tid_gt_str]
+            #     # Get box color
+            #     # color is in BGR format (for cv2), color[:-1] in RGB format
+            #     # (for plt)
+            #     if tid_gt_str not in list(id_to_color):
+            #         id_to_color[tid_gt_str] = cmap.get_random_color(scale=255)
+            #     color = id_to_color[tid_gt_str]
 
-                if self.draw_tid:
-                    info_str = f"{obj_class}{tid_gt_str}"
-                else:
-                    info_str = f"{obj_class}"
+            #     if self.draw_tid:
+            #         info_str = f"{obj_class}{tid_gt_str}"
+            #     else:
+            #         info_str = f"{obj_class}"
 
-                # Make rectangle
-                if self.draw_3d:
-                    rawimg = self.draw_3d_bbox(
-                        rawimg,
-                        box3d_gt,
-                        cam_calib,
-                        cam_pose,
-                        line_color=(color[0], color[1] * 0.7, color[2] * 0.7),
-                        line_width=2,
-                        corner_info=info_str)
+            #     # Make rectangle
+            #     if self.draw_3d:
+            #         rawimg = self.draw_3d_bbox(
+            #             rawimg,
+            #             box3d_gt,
+            #             cam_calib,
+            #             cam_pose,
+            #             line_color=(color[0], color[1] * 0.7, color[2] * 0.7),
+            #             line_width=2,
+            #             corner_info=info_str)
 
-                if self.draw_2d:
-                    self.draw_2d_bbox(
-                        rawimg,
-                        box_gt,
-                        line_color=(color[0], color[1] * 0.7, color[2] * 0.7),
-                        line_width=3,
-                        corner_info=info_str)
+            #     if self.draw_2d:
+            #         self.draw_2d_bbox(
+            #             rawimg,
+            #             box_gt,
+            #             line_color=(color[0], color[1] * 0.7, color[2] * 0.7),
+            #             line_width=3,
+            #             corner_info=info_str)
 
-                if self.draw_traj:
-                    # Draw trajectories
-                    rawimg = self.draw_3d_traj(
-                        rawimg,
-                        loc_world_hist_gt[tid_gt]['loc'],
-                        cam_calib,
-                        cam_pose,
-                        line_color=color)
+            #     if self.draw_traj:
+            #         # Draw trajectories
+            #         rawimg = self.draw_3d_traj(
+            #             rawimg,
+            #             loc_world_hist_gt[tid_gt]['loc'],
+            #             cam_calib,
+            #             cam_pose,
+            #             line_color=color)
 
-                if self.draw_bev:
-                    # Change BGR to RGB
-                    color_bev = [c / 255.0 for c in color[::-1]]
-                    center_hist_gt = tu.worldtocamera(
-                        np.vstack(loc_world_hist_gt[tid_gt]['loc']),
-                        cam_pose)[:, [0, 2]]
-                    quat_cam_rot_t = Quaternion(matrix=cam_pose.rotation.T)
-                    yaw_hist_gt = []
-                    for quat_yaw_world_gt in loc_world_hist_gt[tid_gt]['yaw']:
-                        rotation_cam = quat_cam_rot_t * quat_yaw_world_gt
-                        vtrans = np.dot(rotation_cam.rotation_matrix,
-                                        np.array([1, 0, 0]))
-                        yaw_hist_gt.append(
-                            -np.arctan2(vtrans[2], vtrans[0]).tolist())
-                    yaw_hist_gt = np.vstack(yaw_hist_gt)
-                    pu.plot_bev_obj(
-                        self.ax,
-                        center_gt,
-                        center_hist_gt,
-                        yaw_gt,
-                        yaw_hist_gt,
-                        l_gt,
-                        w_gt,
-                        color_bev,
-                        'GT',
-                        line_width=2)
+            #     if self.draw_bev:
+            #         # Change BGR to RGB
+            #         color_bev = [c / 255.0 for c in color[::-1]]
+            #         center_hist_gt = tu.worldtocamera(
+            #             np.vstack(loc_world_hist_gt[tid_gt]['loc']),
+            #             cam_pose)[:, [0, 2]]
+            #         quat_cam_rot_t = Quaternion(matrix=cam_pose.rotation.T)
+            #         yaw_hist_gt = []
+            #         for quat_yaw_world_gt in loc_world_hist_gt[tid_gt]['yaw']:
+            #             rotation_cam = quat_cam_rot_t * quat_yaw_world_gt
+            #             vtrans = np.dot(rotation_cam.rotation_matrix,
+            #                             np.array([1, 0, 0]))
+            #             yaw_hist_gt.append(
+            #                 -np.arctan2(vtrans[2], vtrans[0]).tolist())
+            #         yaw_hist_gt = np.vstack(yaw_hist_gt)
+            #         pu.plot_bev_obj(
+            #             self.ax,
+            #             center_gt,
+            #             center_hist_gt,
+            #             yaw_gt,
+            #             yaw_hist_gt,
+            #             l_gt,
+            #             w_gt,
+            #             color_bev,
+            #             'GT',
+            #             line_width=2)
 
             for hypo in pd_annos:
 
@@ -699,7 +704,6 @@ class Visualizer():
             vid_trk.release()
             vid_bev.release()
         print(f"{self.res_folder} Done!")
-
     def save_vid(self, info_pd, info_gt):
         # Loop over save_range and plot the BEV
         print("Total {} frames. Now saving...".format(
@@ -726,7 +730,33 @@ class Visualizer():
                 os.system(f"rm {self.trk_vid_name}")
                 os.system(f"rm {self.bev_vid_name}")
 
-        print("Done!")
+        print("Done!")  
+    # def save_vid(self, info_pd):
+    #     # Loop over save_range and plot the BEV
+    #     print("Total {} frames. Now saving...".format(
+    #         sum([len(seq['frames']) for _, seq in info_pd.items()])))
+
+    #     # Iterate through all predicted objects only
+    #     for n_seq_pd, pd_seq in info_pd.items():
+    #         # Plot annotation with predictions only
+    #         if self.draw_3d or self.draw_2d or self.draw_bev:
+    #             self.plot_3D_box(n_seq_pd, pd_seq)  # No gt_seq
+
+    #         # Merge two videos vertically
+    #         if self.is_merge:
+    #             subfolder = 'shows_3D' if self.draw_3d else 'shows_2D'
+    #             output_name = self.trk_vid_name.replace(
+    #                 subfolder, 'shows_compose').replace('tracking', 'compose')
+    #             merge_vid(self.trk_vid_name, self.bev_vid_name, output_name)
+
+    #         # Remove intermediate files if enabled
+    #         if self.is_remove:
+    #             if os.path.exists(self.trk_vid_name):
+    #                 os.remove(self.trk_vid_name)
+    #             if os.path.exists(self.bev_vid_name):
+    #                 os.remove(self.bev_vid_name)
+
+    #     print("Done!")
 
 
 def main():
@@ -740,6 +770,7 @@ def main():
                             args.align_gt)
     info_gt = coco_rf(args.gt_folder, cat_mapping[args.dataset])
     if args.res_folder is None:
+        # plot gt when there is no result 
         info_pd = info_gt
     else:
         info_pd = coco_rf(args.res_folder, cat_mapping[args.dataset])
