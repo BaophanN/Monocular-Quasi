@@ -158,7 +158,7 @@ def read_calib(calib_dir, seq_idx, cam=2):
         e.g.,
             projection = read_calib(cali_dir, vid_id)
     """
-    with open(os.path.join(calib_dir, f'{seq_idx:04d}.txt')) as f:
+    with open(os.path.join(calib_dir, f'{seq_idx:06d}.txt')) as f:
         fields = [line.split() for line in f]
     return np.asarray(fields[cam][1:], dtype=np.float32).reshape(3, 4)
 
