@@ -10,29 +10,6 @@ import scripts.bdd_utils as bu
 import scripts.kitti_utils as ku
 import scripts.tracking_utils as tu
 
-# cats_mapping = {
-#     'person': 1,
-#     'rider': 2,
-#     'car': 3,
-#     'bus': 4,
-#     'truck': 5,
-#     'bicycle': 6,
-#     'motorcycle': 7,
-#     'train': 8
-# }
-# kitti_cats = {
-#     'Pedestrian': 'person',
-#     'Cyclist': 'rider',
-#     'Car': 'car',
-#     'Van': 'car',
-#     'Truck': 'truck',
-#     'Tram': 'train',
-#     'Person': 'person',
-#     'Person_setting': 'person',
-#     # 'Misc': 'misc',
-#     'DontCare': 'car'
-# }
-
 cats_mapping = {
     'pedestrian': 1,
     'cyclist': 2,
@@ -57,7 +34,10 @@ kitti_cats = {
 
 # 396, 1333
 val_sets = ['0001', '0004', '0011', '0012', '0013', '0014', '0015', '0018']
-mini_sets = ['0001']
+# mini_sets = ['0001']
+mini_sets = ['0016', '0010']
+# 0010':1176 frames-highway, '0016':510-citytraffic
+# custom_sets = ['highway', 'citytraffic']
 with open(osp.join('scripts', 'object_ap_eval', 'detection_val.txt'),
           'r') as f:
     det_val_sets = f.read().splitlines()
@@ -79,6 +59,7 @@ def convert_track(data_dir, mode=None, adjust_center=True):
         label_dir = None
 
     vid_names = sorted(os.listdir(img_dir))
+    # print(vid_names); exit()
     print(f"{data_dir} with {len(vid_names)} sequences")
 
     for k, v in cats_mapping.items():
@@ -87,7 +68,7 @@ def convert_track(data_dir, mode=None, adjust_center=True):
     img_id = 0
     global_track_id = 0
     ann_id = 0
-
+    # 0:0010, 1:0016
     for vid_id, vid_name in enumerate(vid_names):
         if mode == 'train':
             if vid_name in val_sets:
@@ -98,23 +79,35 @@ def convert_track(data_dir, mode=None, adjust_center=True):
         elif mode == 'mini':
             if vid_name not in mini_sets:
                 continue
-        print("VID ID: {}".format(vid_id))
+        # elif mode == 'custom':
+        #     if vid_name not in custom_sets:
+        #         continue
+        print("VID ID: {}".format(vid_name))
         ind2id = dict()
         trackid_maps = dict()
         img_names = sorted([
             f.path for f in os.scandir(osp.join(img_dir, vid_name))
             if f.is_file() and f.name.endswith('png')
-        ])
-        vid_info = dict(id=vid_id, name=vid_name, n_frames=len(img_names))
+        ]) # list of images in the folder 
+        # print(img_names);exit()
+        # vid_info = dict(id=vid_name, name=vid_name, n_frames=len(img_names)) # change
+        vid_info = dict(id=vid_id, name=vid_name, n_frames=len(img_names)) # og 
         kitti['videos'].append(vid_info)
 
         projection = ku.read_calib(cali_dir, vid_id)
-
+        # print(projection);exit()
+        # print('img_names',len(img_names))
+        # print('poses',len(poses))
+        # exit()
+        # error yesterday 
+        # now: 0:0010:1176, vid_id:oxt:0000:465
         for fr, img_name in enumerate(sorted(img_names)):
             img = mmcv.imread(img_name)
-            fields = ku.read_oxts(oxt_dir, vid_id)
+            # print(vid_id, vid_name); exit()
+            fields = ku.read_oxts(oxt_dir, vid_name) # change
+            # print('fields',len(fields))
             poses = [ku.KittiPoseParser(fields[i]) for i in range(len(fields))]
-
+            # print('debug', len(img_names), len(poses)); exit()
             rotation = R.from_matrix(poses[fr].rotation).as_euler('xyz')
             position = poses[fr].position - poses[0].position
             pose_dict = dict(rotation=rotation.tolist(),
@@ -369,6 +362,18 @@ def main():
     ann = convert_det(detect_dir, mode=None)
     bu.dump_json(osp.join(out_dir, 'detection_test.json'), ann)
 
+def main_custom():
+    data_dir = '/workspace/datasets/pseudo-KITTI' 
+    
+    out_dir = '/workspace/datasets/pseudo-KITTI/anns' 
+    print('Convert pseudo KITTI Tracking dataset to COCO style.')
+
+    if not osp.isfile(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+    print('custom tracking test')
+    track_dir = osp.join(data_dir, 'tracking', 'testing')
+    ann = convert_track(track_dir, mode='mini')
+    bu.dump_json(osp.join(out_dir, 'tracking_test_custom.json'), ann)        
 
 if __name__ == "__main__":
-    main()
+    main_custom()
