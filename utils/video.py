@@ -46,41 +46,94 @@ def vid_to_imgs(video_path, output_folder, num_frames):
     print(f"Extracted {saved_frames} frames from {total_frames} and saved to {output_folder}")
 import cv2
 import os
+import os
+import cv2
+import numpy as np
 
-def resize_images_in_folder(input_folder, output_folder=None, target_size=(1242, 375)):
+def resize_and_crop_lower_part(input_folder, output_folder=None, target_size=(1242, 375)):
     """
-    Resize all images in a folder to a specified size.
+    Resize images while maintaining aspect ratio, then crop only the upper part to keep the lower part.
 
     :param input_folder: Folder containing images.
-    :param output_folder: Folder to save resized images. If None, overwrite original images.
-    :param target_size: Tuple (width, height) for resizing images.
+    :param output_folder: Folder to save processed images. If None, overwrite original images.
+    :param target_size: Tuple (width, height) for output images.
     """
     # Use input folder as output if not specified
     if output_folder is None:
         output_folder = input_folder
     else:
-        os.makedirs(output_folder, exist_ok=True)  # Create if not exists
+        os.makedirs(output_folder, exist_ok=True)  # Create folder if not exists
 
-    # Loop through all files in the input folder
+    target_width, target_height = target_size
+
     for filename in sorted(os.listdir(input_folder)):
         img_path = os.path.join(input_folder, filename)
-        
-        # Check if the file is an image (jpg, png, jpeg)
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            img = cv2.imread(img_path)
-            if img is None:
-                print(f"Skipping {filename}: Cannot open image.")
-                continue
-            
-            # Resize image
-            resized_img = cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
-            
-            # Save the resized image
-            save_path = os.path.join(output_folder, filename)
-            cv2.imwrite(save_path, resized_img)
-            print(f"Resized and saved: {save_path}")
 
-    print("Resizing completed!")
+        # Check if the file is an image (jpg, png, jpeg)
+        if not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            continue
+        
+        img = cv2.imread(img_path)
+        if img is None:
+            print(f"Skipping {filename}: Cannot open image.")
+            continue
+
+        orig_height, orig_width = img.shape[:2]
+
+        # Compute the scaling factor to match the target width
+        scale = target_width / orig_width
+        new_width = target_width
+        new_height = int(orig_height * scale)
+
+        # Resize image while maintaining aspect ratio
+        resized_img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+
+        # Crop the upper part and keep the bottom part
+        crop_y = max(0, new_height - target_height)
+        cropped_img = resized_img[crop_y:, :]  # Crop from top
+
+        # Save the processed image
+        save_path = os.path.join(output_folder, filename)
+        cv2.imwrite(save_path, cropped_img)
+        print(f"Processed and saved: {save_path}")
+
+    print("Processing completed!")
+
+
+# def resize_images_in_folder(input_folder, output_folder=None, target_size=(1242, 375)):
+#     """
+#     Resize all images in a folder to a specified size.
+
+#     :param input_folder: Folder containing images.
+#     :param output_folder: Folder to save resized images. If None, overwrite original images.
+#     :param target_size: Tuple (width, height) for resizing images.
+#     """
+#     # Use input folder as output if not specified
+#     if output_folder is None:
+#         output_folder = input_folder
+#     else:
+#         os.makedirs(output_folder, exist_ok=True)  # Create if not exists
+
+#     # Loop through all files in the input folder
+#     for filename in sorted(os.listdir(input_folder)):
+#         img_path = os.path.join(input_folder, filename)
+        
+#         # Check if the file is an image (jpg, png, jpeg)
+#         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+#             img = cv2.imread(img_path)
+#             if img is None:
+#                 print(f"Skipping {filename}: Cannot open image.")
+#                 continue
+            
+#             # Resize image
+#             resized_img = cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
+            
+#             # Save the resized image
+#             save_path = os.path.join(output_folder, filename)
+#             cv2.imwrite(save_path, resized_img)
+#             print(f"Resized and saved: {save_path}")
+
+#     print("Resizing completed!")
 
 # Example Usage
 # resize_images_in_folder("input_folder")  # Overwrites images
@@ -99,29 +152,30 @@ def write_video(cap, writer):
 if __name__ == "__main__":
     num_frames = {'highway': 1176,'citytraffic':510}
 
-    input_folder = '/workspace/datasets/pseudo-KITTI/tracking/testing/image_02/0010'
-    resize_images_in_folder(input_folder, input_folder)
-    input_folder = '/workspace/datasets/pseudo-KITTI/tracking/testing/image_02/0016'
-    resize_images_in_folder(input_folder, input_folder)
-
-
-    
-
     # input_video_path_highway = '/workspace/datasets/video/highway.avi' # 30fps, 1800frames 
     # output_folder_highway = 'workspace/datasets/pseudo-KITTI/tracking/testing/image_02/highway'
 
     #! cut into video
-    # input_video_path_highway = '/home/baogp4/datasets/video/highway.avi'
-    # output_folder_highway = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/highway'
-    # vid_to_imgs(input_video_path_highway, output_folder_highway, num_frames['highway'])
+    input_video_path_highway = '/home/baogp4/datasets/video/highway.avi'
+    output_folder_highway = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/0010'
+    vid_to_imgs(input_video_path_highway, output_folder_highway, num_frames['highway'])
 
-    # # input_video_path_citytraffic = '/workspace/datasets/video/citytraffic.avi' # 30fps, 1800frames 
-    # # output_folder_citytraffic = 'workspace/datasets/pseudo-KITTI/tracking/testing/image_02/citytraffic'
+    # input_video_path_citytraffic = '/workspace/datasets/video/citytraffic.avi' # 30fps, 1800frames 
+    # output_folder_citytraffic = 'workspace/datasets/pseudo-KITTI/tracking/testing/image_02/citytraffic'
 
 
-    # input_video_path_citytraffic = '/home/baogp4/datasets/video/citytraffic.avi'
-    # output_folder_citytraffic = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/citytraffic'
-    # vid_to_imgs(input_video_path_citytraffic, output_folder_citytraffic, num_frames['citytraffic'])
+    input_video_path_citytraffic = '/home/baogp4/datasets/video/citytraffic.avi'
+    output_folder_citytraffic = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/0016'
+    vid_to_imgs(input_video_path_citytraffic, output_folder_citytraffic, num_frames['citytraffic'])
+
+    input_folder = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/0010'
+    resize_and_crop_lower_part(input_folder, input_folder)
+    input_folder = '/home/baogp4/datasets/pseudo-KITTI/tracking/testing/image_02/0016'
+    resize_and_crop_lower_part(input_folder, input_folder)
+
+
+    
+
 
 
     #! calculate number of frames 
